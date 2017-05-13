@@ -12,7 +12,7 @@ sudo mkdir /etc/default
 sudo touch /etc/default/udhcpd
 echo "start 192.168.42.2 " >>   $x
 echo "end 192.168.42.20" >> $x
-echo "interface wlan0" >> $x
+echo "interface wlan1" >> $x
 echo "remaining yes" >> $x
 echo "opt dns 8.8.8.8 4.2.2.2" >> $x
 echo "opt subnet 255.255.255.0" >> $x
@@ -28,7 +28,7 @@ echo "# -f    run in foreground" >> $x
 echo "DHCPD_OPTS=\"-S\"" >> $x
 sudo mv $x  /etc/default/udhcpd
 	#give the Pi a static IP address 
-sudo ifconfig wlan0 192.168.42.1
+sudo ifconfig wlan1 192.168.42.1
 #------------SETUP Station Interface for Rt5370-------------------------------------
 touch $x
 sudo cp  /etc/network/interfaces /etc/network/interfaces.bk
@@ -36,11 +36,11 @@ echo "source-directory /etc/network/interfaces.d" >> $x
 echo "auto lo" >> $x
 echo "iface lo inet loopback" >> $x
 echo "" >> $x
-echo "auto eth0" >> $x
-echo "iface eth0 inet dhcp" >> $x
-echo "" >> $x
-echo "allow-hotplug wlan0" >> $x
+echo "auto wlan0" >> $x
 echo "iface wlan0 inet dhcp" >> $x
+echo "" >> $x
+echo "allow-hotplug wlan1" >> $x
+echo "iface wlan1 inet dhcp" >> $x
 echo "    wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf" >> $x
 echo "    wireless-power off" >> $x
 echo "" >> $x
@@ -56,10 +56,10 @@ echo "source-directory /etc/network/interfaces.d" >> $x
 echo "auto lo" >> $x
 echo "iface lo inet loopback" >> $x
 echo "" >> $x
-echo "auto eth0" >> $x
-echo "iface eth0 inet dhcp" >> $x
+echo "auto wlan0" >> $x
+echo "iface wlan0 inet dhcp" >> $x
 echo "" >> $x
-echo "iface wlan0 inet static" >> $x
+echo "iface wlan1 inet static" >> $x
 echo "    address 192.168.42.1" >> $x
 echo "    netmask 255.255.255.0" >> $x
 echo "    wireless-power off" >> $x
@@ -85,7 +85,7 @@ sudo mv $x /etc/wpa_supplicant/wpa_supplicant.conf
 
 #3. Configure HostAPD------------------------------------------------
 touch $x
-echo "interface=wlan0" >> $x
+echo "interface=wlan1" >> $x
 echo "driver=nl80211" >> $x
 echo "ssid=My_AP" >> $x
 echo "hw_mode=g" >> $x
@@ -107,9 +107,9 @@ sudo mv $x /etc/default/hostapd
 touch $x
 sudo sh -c "echo 1 >> /proc/sys/net/ipv4/ip_forward"
 sudo echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
-sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-sudo iptables -A FORWARD -i eth0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
-sudo iptables -A FORWARD -i wlan0 -o eth0 -j ACCEPT
+sudo iptables -t nat -A POSTROUTING -o wlan0 -j MASQUERADE
+sudo iptables -A FORWARD -i wlan0 -o wlan1 -m state --state RELATED,ESTABLISHED -j ACCEPT
+sudo iptables -A FORWARD -i wlan1 -o wlan0 -j ACCEPT
 sudo sh -c "iptables-save >> /etc/iptables.ipv4.nat"
 #------------------------------5. Fire it up! R----------------------------------------
 sudo service hostapd start
